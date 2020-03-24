@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "protobuf_gen",
+    "timescale_pgmodel",
+]
