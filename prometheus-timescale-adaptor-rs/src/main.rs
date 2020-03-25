@@ -87,12 +87,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     server.await?;
 
+    eprintln!("Exiting..");
+
     Ok(())
 }
 
 async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/write") => {
+            eprintln!("got write!");
             let body = hyper::body::to_bytes(req.into_body()).await?;
             let mut decompresser = snap::read::FrameDecoder::new(&*body);
             let mut buffer = vec![];
