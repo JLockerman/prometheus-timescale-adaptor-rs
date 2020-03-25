@@ -135,7 +135,11 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             let size = write_req.get_timeseries().len();
             WRITE_REQ_SIZE.with(|s| {
                 let old = s.get();
-                s.set(1*size/3 + old*2/3);
+                if old > 0 {
+                    s.set(1*size/3 + old*2/3);
+                } else {
+                    s.set(size)
+                }
             });
             write_req.clear();
             WRITE_REQ_CACHE.with(|c| c.set(Some(write_req)));
