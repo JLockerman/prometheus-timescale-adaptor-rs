@@ -114,7 +114,8 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             }
 
         }
-        _ => {
+        (method, path) => {
+            eprintln!("unexpected req: {:?}, {:?}", method, path);
             let mut not_found = Response::default();
             *not_found.status_mut() = StatusCode::NOT_FOUND;
             Ok(not_found)
