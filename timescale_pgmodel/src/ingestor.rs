@@ -150,7 +150,7 @@ async fn insert_data_query((client, metric, samples): (&Client, String, Vec<Samp
         for sample in samples {
             //TODO negative?
             let timestamp = SystemTime::UNIX_EPOCH + Duration::from_millis(sample.get_timestamp() as u64);
-            writer.as_mut().write(&[&timestamp, &sample.get_value(), &id]).await?
+            writer.as_mut().write(&[&timestamp, &sample.get_value(), &(id as i32)]).await?
         }
     }
     writer.finish().await
