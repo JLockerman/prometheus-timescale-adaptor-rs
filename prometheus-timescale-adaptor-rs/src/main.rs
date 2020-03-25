@@ -109,7 +109,7 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
                 .unwrap_or_else(Default::default);
             {
                 let mut decoder = protobuf::CodedInputStream::from_carllerche_bytes(&decompressed);
-                parse_write_req(&mut write_req, &mut decoder);
+                parse_write_req(&mut write_req, &mut decoder)?;
             }
 
             match client.ingest(write_req.get_timeseries()).await {
