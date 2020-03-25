@@ -143,12 +143,14 @@ async fn insert_data_query((client, metric, samples): (&Client, String, Vec<Samp
         Some(name) => name,
         None => client.get_metric_table_name(metric).await?,
     };
+    eprintln!("prep copy to {}", table_name);
     let sink = client.pg_client.copy_in(&*format!("COPY prom.{} FROM stdin BINARY", table_name)).await?;
     let writer = BinaryCopyInWriter::new(sink, &[PgType::TIMESTAMPTZ, PgType::FLOAT8, PgType::INT8]);
     pin_mut!(writer);
     for Samples(id, samples) in samples {
         for sample in samples {
             //TODO do we have to convert the timestamp
+            eprintln!("copy ({}, {}, {}) to {}", sample.get_timestamp(), sample.get_value(), id, table_name);
             writer.as_mut().write(&[&sample.get_timestamp(), &sample.get_value(), &id]).await?
         }
     }

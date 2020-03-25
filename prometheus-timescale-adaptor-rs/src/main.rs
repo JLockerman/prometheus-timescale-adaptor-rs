@@ -95,15 +95,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/write") => {
-            eprintln!("got write!");
             let body = hyper::body::to_bytes(req.into_body()).await?;
-            eprintln!("got body! {}", body.len());
-            // let mut decompresser = snap::read::FrameDecoder::new(&*body);
             let mut decompresser = snap::raw::Decoder::new();
             let buffer = decompresser.decompress_vec(&*body)?;
-            // let mut buffer = vec![];
-            // decompresser.read_to_end(&mut buffer)?;
-            eprintln!("decompressed! {} Bytes", buffer.len());
             let decompressed = buffer.into();
             let write_req: WriteRequest = protobuf::parse_from_carllerche_bytes(&decompressed)?;
             eprintln!("write_req!");
