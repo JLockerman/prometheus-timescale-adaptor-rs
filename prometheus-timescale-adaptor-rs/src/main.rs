@@ -112,7 +112,7 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
                 parse_write_req(&mut write_req, &mut decoder)?;
             }
 
-            match client.ingest(write_req.get_timeseries()).await {
+            let res = match client.ingest(write_req.get_timeseries()).await {
                 Ok(_rows) => {
                     let mut ok = Response::default();
                     *ok.status_mut() = StatusCode::OK;
@@ -124,8 +124,12 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
                     *err.status_mut() = StatusCode::BAD_REQUEST;
                     Ok(err)
                 }
-            }
+            };
 
+            write_req.clear();
+            let mut write_req = WRITE_REQ_CACHE.with(|c| c.replace(Some(write_req)))
+
+            res
         }
         (method, path) => {
             eprintln!("unexpected req: {:?}, {:?}", method, path);
