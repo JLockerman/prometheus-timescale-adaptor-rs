@@ -97,7 +97,7 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
         (&Method::POST, "/write") => {
             eprintln!("got write!");
             let body = hyper::body::to_bytes(req.into_body()).await?;
-            eprintln!("got body!");
+            eprintln!("got body! {}", body.len());
             let mut decompresser = snap::read::FrameDecoder::new(&*body);
             let mut buffer = vec![];
             decompresser.read_to_end(&mut buffer)?;
