@@ -1,10 +1,13 @@
 
 use std::{
+    cell::Cell,
     sync::Arc,
 };
 
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
+
+use protobuf::{Clear, Message};
 
 use timescale_pgmodel::{
     promb::remote::WriteRequest,
@@ -91,6 +94,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
+thread_local! {
+    pub static WRITE_REQ_CACHE: Cell<Option<WriteRequest>> = Cell::new(None);
+}
+
 async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>, Box<dyn std::error::Error + Send + Sync>> {
     match (req.method(), req.uri().path()) {
         (&Method::POST, "/write") => {
@@ -98,7 +105,13 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             let mut decompresser = snap::raw::Decoder::new();
             let buffer = decompresser.decompress_vec(&*body)?;
             let decompressed = buffer.into();
-            let write_req: WriteRequest = protobuf::parse_from_carllerche_bytes(&decompressed)?;
+            let mut write_req = WRITE_REQ_CACHE.with(|c| c.replace(None))
+                .unwrap_or_else(Default::default);
+            {
+                let mut decoder = protobuf::CodedInputStream::from_carllerche_bytes(&decompressed);
+                parse_write_req(&mut write_req, &mut decoder);
+            }
+
             match client.ingest(write_req.get_timeseries()).await {
                 Ok(_rows) => {
                     let mut ok = Response::default();
@@ -121,4 +134,12 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             Ok(not_found)
         }
     }
+}
+
+fn parse_write_req(write_req: &mut WriteRequest, is: &mut protobuf::CodedInputStream)
+-> protobuf::ProtobufResult<()> {
+    write_req.clear();
+    write_req.merge_from(is)?;
+    write_req.check_initialized()?;
+    Ok(())
 }
