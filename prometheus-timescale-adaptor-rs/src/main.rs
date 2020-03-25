@@ -97,13 +97,17 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
         (&Method::POST, "/write") => {
             eprintln!("got write!");
             let body = hyper::body::to_bytes(req.into_body()).await?;
+            eprintln!("got body!");
             let mut decompresser = snap::read::FrameDecoder::new(&*body);
             let mut buffer = vec![];
             decompresser.read_to_end(&mut buffer)?;
+            eprintln!("decompressed!");
             let decompressed = buffer.into();
             let write_req: WriteRequest = protobuf::parse_from_carllerche_bytes(&decompressed)?;
+            eprintln!("write_req!");
             match client.ingest(write_req.get_timeseries()).await {
                 Ok(_rows) => {
+                    eprintln!("response!");
                     let mut ok = Response::default();
                     *ok.status_mut() = StatusCode::OK;
                     Ok(ok)
