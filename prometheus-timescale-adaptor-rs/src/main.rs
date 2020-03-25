@@ -127,7 +127,7 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             };
 
             write_req.clear();
-            let mut write_req = WRITE_REQ_CACHE.with(|c| c.replace(Some(write_req)))
+            let mut write_req = WRITE_REQ_CACHE.with(|c| c.replace(Some(write_req)));
 
             res
         }
