@@ -144,7 +144,7 @@ async fn insert_data_query((client, metric, samples): (&Client, String, Vec<Samp
         None => client.get_metric_table_name(metric).await?,
     };
     let sink = client.pg_client.copy_in(&*format!("COPY prom.{} FROM stdin BINARY", table_name)).await?;
-    let writer = BinaryCopyInWriter::new(sink, &[PgType::TIMESTAMPTZ, PgType::FLOAT8, PgType::INT8]);
+    let writer = BinaryCopyInWriter::new(sink, &[PgType::TIMESTAMPTZ, PgType::FLOAT8, PgType::INT4]);
     pin_mut!(writer);
     for Samples(id, samples) in samples {
         for sample in samples {
