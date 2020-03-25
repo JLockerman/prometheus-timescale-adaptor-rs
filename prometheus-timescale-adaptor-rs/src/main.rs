@@ -58,7 +58,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let database = matches.value_of("database").unwrap();
     let password = matches.value_of("password").unwrap();
 
-    let connection_str = format!("host={} port={} user={} dbname={} password='{}', connect_timeout=10",
+    let connection_str = format!("host={} port={} user={} dbname={} password='{}' connect_timeout=10",
         host, port, user, database, password);
     let (client, connection) =
         tokio_postgres::connect(&*connection_str, tokio_postgres::NoTls).await?;
