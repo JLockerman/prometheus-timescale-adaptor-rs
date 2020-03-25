@@ -33,7 +33,7 @@ impl Client {
     pub async fn from_pg_client(pg_client: PgClient) -> Result<Self, PgError> {
         let get_id_for_labels = pg_client.prepare("SELECT get_series_id_for_key_value_array($1, $2, $3)")
             .await?;
-        let get_metrics_table = pg_client.prepare("SELECT get_series_id_for_key_value_array($1, $2, $3)")
+        let get_metrics_table = pg_client.prepare("SELECT table_name FROM get_or_create_metric_table_name($1)")
             .await?;
         Ok(Self{ pg_client, get_id_for_labels, get_metrics_table, })
     }
@@ -143,14 +143,12 @@ async fn insert_data_query((client, metric, samples): (&Client, String, Vec<Samp
         Some(name) => name,
         None => client.get_metric_table_name(metric).await?,
     };
-    eprintln!("prep copy to {}", table_name);
     let sink = client.pg_client.copy_in(&*format!("COPY prom.{} FROM stdin BINARY", table_name)).await?;
     let writer = BinaryCopyInWriter::new(sink, &[PgType::TIMESTAMPTZ, PgType::FLOAT8, PgType::INT8]);
     pin_mut!(writer);
     for Samples(id, samples) in samples {
         for sample in samples {
             //TODO do we have to convert the timestamp
-            eprintln!("copy ({}, {}, {}) to {}", sample.get_timestamp(), sample.get_value(), id, table_name);
             writer.as_mut().write(&[&sample.get_timestamp(), &sample.get_value(), &id]).await?
         }
     }
