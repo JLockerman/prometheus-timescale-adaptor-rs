@@ -95,7 +95,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 thread_local! {
-    pub static WRITE_REQ_CACHE: Cell<Option<WriteRequest>> = Cell::new(None);
+    pub static WRITE_REQ_CACHE: Cell<Vec<WriteRequest>> = Cell::new(Vec::new());
     pub static WRITE_REQ_SIZE: Cell<usize> = Cell::new(0);
 }
 
@@ -106,8 +106,12 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             let mut decompresser = snap::raw::Decoder::new();
             let buffer = decompresser.decompress_vec(&*body)?;
             let decompressed = buffer.into();
-            let mut write_req = WRITE_REQ_CACHE.with(|c| c.replace(None))
-                .unwrap_or_else(|| {
+            let mut write_req = WRITE_REQ_CACHE.with(|c| {
+                    let mut buf = c.take();
+                    let req = buf.pop();
+                    c.set(buf);
+                    req
+                }).unwrap_or_else(|| {
                     let mut req: WriteRequest = Default::default();
                     let expected_size = WRITE_REQ_SIZE.with(|s| s.get());
                     req.set_timeseries(Vec::with_capacity(expected_size).into());
@@ -142,7 +146,11 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
                 }
             });
             write_req.clear();
-            WRITE_REQ_CACHE.with(|c| c.set(Some(write_req)));
+            WRITE_REQ_CACHE.with(|c| {
+                let mut buf = c.take();
+                buf.push(write_req);
+                c.set(buf);
+            });
 
             res
         }
