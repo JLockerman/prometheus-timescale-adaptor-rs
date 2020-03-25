@@ -1,0 +1,16 @@
+[package]
+name = "prometheus-timescale-adaptor-rs"
+version = "0.1.0"
+authors = ["Joshua Lockerman"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.0"
+hyper = "0.13.4"
+protobuf = { version = "2.10.2", features = ["with-bytes"] }
+snap = "1"
+timescale_pgmodel = { path = "../timescale_pgmodel" }
+tokio = { version = "0.2.13", features = ["rt-threaded", "macros"] }
+tokio-postgres = "0.5.3"

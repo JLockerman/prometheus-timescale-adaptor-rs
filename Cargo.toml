@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "prometheus-timescale-adaptor-rs",
     "protobuf_gen",
     "timescale_pgmodel",
 ]
