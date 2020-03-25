@@ -49,7 +49,7 @@ impl Client {
 
     async fn insert_series(&self, mut series: NewSeries, samples: &mut HashMap<String, Vec<Samples<'_>>>)
     -> Result<(), Vec<PgError>> {
-        series.sort_keys();
+        // series.sort_keys();
         let mut inserts = FuturesUnordered::from_iter(series.into_iter()
             .map(|(l, i)| (self, l, i))
             .map(series_insert_query)

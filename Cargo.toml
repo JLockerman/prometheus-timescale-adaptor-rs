@@ -5,3 +5,7 @@ members = [
     "protobuf_gen",
     "timescale_pgmodel",
 ]
+
+[profile.release]
+debug = true
+panic = "abort"
