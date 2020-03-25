@@ -1,5 +1,5 @@
 
-use std::{collections::HashMap, iter::FromIterator};
+use std::{collections::HashMap, iter::FromIterator, time::{SystemTime, Duration}};
 
 use futures::{pin_mut, stream::{FuturesUnordered, StreamExt}};
 
@@ -148,8 +148,9 @@ async fn insert_data_query((client, metric, samples): (&Client, String, Vec<Samp
     pin_mut!(writer);
     for Samples(id, samples) in samples {
         for sample in samples {
-            //TODO do we have to convert the timestamp
-            writer.as_mut().write(&[&sample.get_timestamp(), &sample.get_value(), &id]).await?
+            //TODO negative?
+            let timestamp = SystemTime::UNIX_EPOCH + Duration::from_millis(sample.get_timestamp() as u64);
+            writer.as_mut().write(&[&timestamp, &sample.get_value(), &id]).await?
         }
     }
     writer.finish().await
