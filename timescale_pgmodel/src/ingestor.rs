@@ -39,9 +39,9 @@ pub struct Client {
 
 impl Client {
     pub async fn from_pg_client(pg_client: PgClient) -> Result<Self, PgError> {
-        let get_id_for_labels = pg_client.prepare("SELECT get_series_id_for_key_value_array($1, $2, $3)")
+        let get_id_for_labels = pg_client.prepare("SELECT prom.get_series_id_for_key_value_array($1, $2, $3)")
             .await?;
-        let get_metrics_table = pg_client.prepare("SELECT table_name FROM get_or_create_metric_table_name($1)")
+        let get_metrics_table = pg_client.prepare("SELECT table_name FROM prom.get_or_create_metric_table_name($1)")
             .await?;
         Ok(Self{ pg_client, get_id_for_labels, get_metrics_table, })
     }
