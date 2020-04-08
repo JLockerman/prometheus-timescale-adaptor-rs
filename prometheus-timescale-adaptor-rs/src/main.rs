@@ -14,7 +14,7 @@ use timescale_pgmodel::{
     ingestor::Client
 };
 
-#[tokio::main]
+#[tokio::main(core_threads = 4)]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use clap::{App, Arg};
 
@@ -105,6 +105,7 @@ async fn write(client: Arc<Client>, req: Request<Body>) -> Result<Response<Body>
             let body = hyper::body::to_bytes(req.into_body()).await?;
             let mut decompresser = snap::raw::Decoder::new();
             let buffer = decompresser.decompress_vec(&*body)?;
+            drop(body);
             let decompressed = buffer.into();
             let mut write_req = WRITE_REQ_CACHE.with(|c| {
                     let mut buf = c.take();
